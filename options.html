@@ -1,0 +1,17 @@
+
+<p>Enter here your code to create shortcuts.</p>
+<li>Use addAlias("alias_name", "alias_url"); to create a new alias</li>
+<li>Use addFunction(function); to create a new alias with the function name</li>
+<p></p>
+<p>Note that you can enter any javascript you want.</p>
+<p></p>
+<p>Here are some examples.</p>
+<li>addAlias("exa", "http://www.example.com"); will allow you to go to the given page with "s exa" in the address bar</li>
+<li>addAlias("w", "https://en.wikipedia.org/wiki/{0}"); will allow you to search in wikipedia with "s w {word}"</li>
+<li>addFunction(function test(a) { return "http://www.example.com/"+(a*a); }); will redirect you to the given page accordingly to your agruments, e.g. "s test 2"</li>
+<p></p>
+<textarea id="code" rows="30" cols="80"></textarea>
+<div></div>
+<button id="save">Save</button>
+<div id="status"></div>
+<script src="options.js"></script>
