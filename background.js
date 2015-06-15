@@ -8,7 +8,7 @@ var ShortcutType = {
 
 String.prototype.format = function(args) {
     return this.replace(/{(\d+)}/g, function(match, number) { 
-        return typeof args[number] != 'undefined' ? args[number] : "";
+        return typeof args[number] != 'undefined' ? args[number] : "?";
     });
 };
 
@@ -36,6 +36,7 @@ function generateUrlFromEntry(text) {
     if (args[0] in functions) {
         return functions[args[0]].apply(this, args.slice(1));
     }
+    return text;
 }
 
 chrome.storage.sync.get("code", function (items) {
@@ -58,10 +59,10 @@ chrome.omnibox.onInputChanged.addListener(
         if (type == ShortcutType.FUNCTION) {
             descr = func.toString().replace(/\s+/g, " ");
         } else if (type == ShortcutType.ALIAS) {
-            descr = type+" "+args[0]+":"+func.target;
+            descr = "["+type+":"+args[0]+"] <match>"+generateUrlFromEntry(text)+"</match>";
         }
         suggest([
-          {content: args[0], description: descr}
+          {content: generateUrlFromEntry(text), description: descr}
         ]);
     }
   });

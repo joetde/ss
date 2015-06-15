@@ -1,13 +1,14 @@
 {
     "name": "Scriptable Shortcuts",
     "description" : "To use, type 's' in the Omnibox followed by the command you want to pass to your script.",
-    "version": "0.1",
+    "version": "0.2",
     "background": {"scripts": ["background.js"]},
     "permissions": ["storage", "contextMenus"],
     "omnibox": { "keyword" : "s" },
     "icons": {
           "16": "icon16.png",
-          "48": "icon48.png"
+          "48": "icon48.png",
+          "128": "icon128.png"
         },
     "options_page": "options.html",
     "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
