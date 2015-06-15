@@ -16,6 +16,18 @@ String.prototype.format = function(args) {
 String.prototype.startsWith = function (str){
     return this.indexOf(str) === 0;
 };
+
+/*Array.prototype.getUnique = function(){
+   var u = {}, a = [];
+   for(var i = 0, l = this.length; i < l; ++i){
+      if(u.hasOwnProperty(this[i])) {
+         continue;
+      }
+      a.push(this[i]);
+      u[this[i]] = 1;
+   }
+   return a;
+}*/
 // ---
 
 function functionName(func) {
@@ -29,7 +41,7 @@ function addAlias(aliasName, aliasUrl) {
     function newAlias() { return aliasUrl.format(Array.prototype.slice.call(arguments)); };
     newAlias.type = ShortcutType.ALIAS;
     newAlias.target = aliasUrl;
-    newAlias.nbArgs = (aliasUrl.match(/{(\d+)}/g) || []).length;
+    newAlias.nbArgs = (aliasUrl.match(/{(\d+)}/g) || [])/*.getUnique()*/.length;
     functions[aliasName] = newAlias;
 }
 
@@ -70,9 +82,11 @@ function generateSuggestions(text, help) {
             // Pluck you type!
             sim_key = sim_key.join(" ");
             // priority closeness in size and number of arguments (in a ugly way)
+            var prio_length = args[0].length - key.length;
+            var prio_args = Math.abs(args.length - 1 - functions[key].nbArgs);
             suggestions.push({content: generateUrl(sim_key),
                 description: generateDescription(sim_key),
-                prio: args[0].length - key.length - 5 * Math.abs(args.length - 1 - functions[key].nbArgs)});
+                prio: prio_length - 10 * prio_args});
         }
     }
     suggestions.sort(function (a, b) {return b.prio - a.prio;});
