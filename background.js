@@ -6,11 +6,17 @@ var ShortcutType = {
     ALIAS : "ALIAS"
 }
 
+// helpers
 String.prototype.format = function(args) {
     return this.replace(/{(\d+)}/g, function(match, number) { 
         return typeof args[number] != 'undefined' ? args[number] : "?";
     });
 };
+
+String.prototype.startsWith = function (str){
+    return this.indexOf(str) === 0;
+};
+// ---
 
 function functionName(func) {
     var ret = func.toString();
@@ -23,20 +29,54 @@ function addAlias(aliasName, aliasUrl) {
     function newAlias() { return aliasUrl.format(Array.prototype.slice.call(arguments)); };
     newAlias.type = ShortcutType.ALIAS;
     newAlias.target = aliasUrl;
+    newAlias.nbArgs = (aliasUrl.match(/{(\d+)}/g) || []).length;
     functions[aliasName] = newAlias;
 }
 
 function addFunction(func) {
     func.type = ShortcutType.FUNCTION;
+    func.nbArgs = func.length;
     functions[functionName(func)] = func;
 }
 
-function generateUrlFromEntry(text) {
+function generateUrl(text) {
     args = text.split(/\s+/);
     if (args[0] in functions) {
         return functions[args[0]].apply(this, args.slice(1));
     }
     return text;
+}
+
+function generateDescription(text) {
+    var args = text.split(/\s+/);
+    var func = functions[args[0]]
+    var type = func.type;
+    var descr = "";
+    if (type == ShortcutType.FUNCTION) {
+        descr = "["+type+":"+args[0]+"] "+func.toString().replace(/\s+/g, " ");
+    } else if (type == ShortcutType.ALIAS) {
+        descr = "["+type+":"+args[0]+"] <match>"+generateUrl(text)+"</match>";
+    }
+    return descr;
+}
+
+function generateSuggestions(text, help) {
+    var args = text.split(/\s+/);
+    var suggestions = [];
+    for (key in functions) {
+        if (key.startsWith(args[0]) || help) {
+            var sim_key = args.slice(0);
+            sim_key[0] = key;
+            // Pluck you type!
+            sim_key = sim_key.join(" ");
+            // priority closeness in size and number of arguments (in a ugly way)
+            suggestions.push({content: generateUrl(sim_key),
+                description: generateDescription(sim_key),
+                prio: args[0].length - key.length - 5 * Math.abs(args.length - 1 - functions[key].nbArgs)});
+        }
+    }
+    suggestions.sort(function (a, b) {return b.prio - a.prio;});
+    return suggestions.map(function (s) { return {content: s.content, description: s.description}; } )
 }
 
 chrome.storage.sync.get("code", function (items) {
@@ -51,24 +91,15 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
 
 chrome.omnibox.onInputChanged.addListener(
   function(text, suggest) {
-    args = text.split(/\s+/);
-    if (args[0] in functions) {
-        func = functions[args[0]]
-        type = func.type;
-        descr = "";
-        if (type == ShortcutType.FUNCTION) {
-            descr = func.toString().replace(/\s+/g, " ");
-        } else if (type == ShortcutType.ALIAS) {
-            descr = "["+type+":"+args[0]+"] <match>"+generateUrlFromEntry(text)+"</match>";
-        }
-        suggest([
-          {content: generateUrlFromEntry(text), description: descr}
-        ]);
+    if (text.startsWith("?")) {
+        suggest(generateSuggestions(text, true));
+        return;
     }
+    suggest(generateSuggestions(text));
   });
 
 chrome.omnibox.onInputEntered.addListener(
     function(text) {
-        var toUrl = generateUrlFromEntry(text);
+        var toUrl = generateUrl(text);
         chrome.tabs.update({url: toUrl});
     });
