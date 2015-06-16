@@ -63,12 +63,7 @@ function generateDescription(text) {
     var args = text.split(/\s+/);
     var func = functions[args[0]]
     var type = func.type;
-    var descr = "";
-    if (type == ShortcutType.FUNCTION) {
-        descr = "["+type+":"+args[0]+"] "+func.toString().replace(/\s+/g, " ");
-    } else if (type == ShortcutType.ALIAS) {
-        descr = "["+type+":"+args[0]+"] <match>"+generateUrl(text)+"</match>";
-    }
+    var descr = "["+type+":"+args[0]+"] <match>"+generateUrl(text)+"</match>";
     return descr;
 }
 
@@ -114,6 +109,7 @@ chrome.omnibox.onInputChanged.addListener(
 
 chrome.omnibox.onInputEntered.addListener(
     function(text) {
+        if (text == "?") { chrome.runtime.openOptionsPage(); return; }
         var toUrl = generateUrl(text);
         chrome.tabs.update({url: toUrl});
     });
